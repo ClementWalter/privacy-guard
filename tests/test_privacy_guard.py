@@ -45,7 +45,7 @@ def rules(line: str, denylist=None) -> set[str]:
         (f"auth: Bearer {JWT}", "jwt"),
         (PEM, "private-key"),
         (f"ANTHROPIC_API_KEY={ANTHROPIC}", "llm-api-key"),
-        ("api_key = 'q8Zr2Lw9Xp4Nt7Vb3Kd6'", "credential-assignment"),  # privacy-guard: allow
+        ("api_key = 'q8Zr2Lw9Xp4Nt7Vb3Kd6'", "credential-assignment"),  # privacy-guard: allow gitleaks:allow
         (f"cfg = '{HOME}'", "home-path"),
         (f"contact {EMAIL}", "email"),
         (f"tel {PHONE}", "phone-fr"),
