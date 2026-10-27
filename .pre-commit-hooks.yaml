@@ -1,0 +1,12 @@
+- id: privacy-guard
+  name: privacy-guard (secrets and personal data)
+  entry: privacy-guard
+  language: python
+  types: [text]
+- id: privacy-guard-files
+  name: privacy-guard (credential file names)
+  entry: privacy-guard
+  language: python
+  # Binary credential stores (cookies.sqlite, *.session) are not `text`.
+  types: [file]
+  exclude_types: [text]

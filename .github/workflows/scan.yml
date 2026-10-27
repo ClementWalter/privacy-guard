@@ -1,0 +1,50 @@
+# Reusable privacy scan: privacy-guard over the tree and the full history, then
+# gitleaks as an independent second opinion. Callers pin this file by commit SHA.
+name: privacy-scan
+
+on:
+  workflow_call:
+    inputs:
+      guard-ref:
+        description: privacy-guard commit to run (same SHA the caller pins this workflow at)
+        required: true
+        type: string
+    secrets:
+      PRIVACY_GUARD_DENYLIST:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ClementWalter/privacy-guard
+          ref: ${{ inputs.guard-ref }}
+          path: .privacy-guard-tool
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+      - name: privacy-guard (tree)
+        env:
+          PRIVACY_GUARD_DENYLIST: ${{ secrets.PRIVACY_GUARD_DENYLIST }}
+        run: uv run --script .privacy-guard-tool/privacy_guard.py --all
+      - name: privacy-guard (history)
+        env:
+          PRIVACY_GUARD_DENYLIST: ${{ secrets.PRIVACY_GUARD_DENYLIST }}
+        run: uv run --script .privacy-guard-tool/privacy_guard.py --history
+      - name: gitleaks (history)
+        env:
+          VERSION: 8.30.1
+          SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          echo "${SHA256}  gitleaks.tgz" | sha256sum -c -
+          tar -xzf gitleaks.tgz gitleaks
+          ./gitleaks git --redact --no-banner .

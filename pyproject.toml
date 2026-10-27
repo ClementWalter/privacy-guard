@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[project]
+name = "privacy-guard"
+version = "0.1.0"
+description = "Pre-commit hook that blocks secrets and personal data from public repos."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+privacy-guard = "privacy_guard:main"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["privacy_guard.py"]
