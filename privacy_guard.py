@@ -165,8 +165,12 @@ def nir_valid(m: re.Match[str]) -> bool:
     return 97 - body % 97 == int(key)
 
 
-def load_denylist() -> list[re.Pattern[str]]:
-    """Denylist entries: literal terms, or `re:<regex>`; `#` starts a comment."""
+def load_denylist(allowlist: list[re.Pattern[str]] | None = None) -> list[re.Pattern[str]]:
+    """Denylist entries: literal terms, or `re:<regex>`; `#` starts a comment.
+
+    An entry matched by a `.privacy-guard-allow` regex is dropped, so a private
+    repo can accept a term it legitimately holds (e.g. `^deny:F[eé]nelon$`).
+    """
     lines: list[str] = []
     path = Path(os.environ.get("PRIVACY_GUARD_DENYLIST_FILE", DENYLIST_PATH))
     if path.is_file():
@@ -176,6 +180,8 @@ def load_denylist() -> list[re.Pattern[str]]:
     for raw in lines:
         entry = raw.strip()
         if not entry or entry.startswith("#"):
+            continue
+        if any(a.search(f"deny:{entry.removeprefix('re:')}") for a in allowlist or []):
             continue
         if entry.startswith("re:"):
             out.append(re.compile(entry[3:], re.I))
@@ -258,7 +264,8 @@ def findings_for_text(
 
 
 def scan_files(paths: Iterable[str], root: Path) -> Iterator[Finding]:
-    denylist, allowlist = load_denylist(), load_allowlist(root)
+    allowlist = load_allowlist(root)
+    denylist = load_denylist(allowlist)
     for p in paths:
         path = Path(p)
         if sensitive_name(p):
@@ -280,7 +287,8 @@ def git(root: Path, *args: str) -> str:
 
 def scan_history(root: Path) -> Iterator[Finding]:
     """Scan every line ever added on any ref, deduplicated per (file, rule, hit)."""
-    denylist, allowlist = load_denylist(), load_allowlist(root)
+    allowlist = load_allowlist(root)
+    denylist = load_denylist(allowlist)
     out = git(root, "log", "--all", "-p", "-U0", "--no-color", "--no-ext-diff",
               "--format=commit %H")
     commit, file, seen = "", "", set()

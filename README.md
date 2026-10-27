@@ -66,6 +66,9 @@ secret.
 - Add `privacy-guard: allow` to the line.
 - Or add a regex to `.privacy-guard-allow` at the repo root. Any finding whose
   matched text matches it is skipped.
+- A private repo that legitimately holds a denylist term drops it with a
+  `deny:` line in `.privacy-guard-allow`, matched against `deny:<entry>`:
+  `^deny:Zorglub$`.
 
 ## Commands
 

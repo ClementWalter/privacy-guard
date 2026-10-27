@@ -113,6 +113,15 @@ def test_denylist_reads_regex_entries(tmp_path, monkeypatch):
     assert len(pg.load_denylist()) == 1
 
 
+def test_allowlist_drops_a_denylist_entry(tmp_path, monkeypatch):
+    monkeypatch.setenv("PRIVACY_GUARD_DENYLIST", "Zorglub\nre:Gl[ou]rb")
+    monkeypatch.setenv("PRIVACY_GUARD_DENYLIST_FILE", str(tmp_path / "none.txt"))
+    (tmp_path / ".privacy-guard-allow").write_text("^deny:Gl\\[ou\\]rb$\n")
+    f = tmp_path / "a.md"
+    f.write_text("Glorb and Zorglub\n")
+    assert [x.rule for x in pg.scan_files([str(f)], tmp_path)] == ["denylist#1"]
+
+
 def test_excerpt_is_masked():
     assert pg.mask(GH) == "ghp_…"
 
