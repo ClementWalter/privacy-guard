@@ -1,0 +1,2 @@
+# Synthetic credential-assignment fixture, committed before its gitleaks:allow marker.
+044afcb40825f481861e5e65cfa8a8b18842ec28:tests/test_privacy_guard.py:generic-api-key:48
